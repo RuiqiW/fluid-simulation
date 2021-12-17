@@ -1,4 +1,5 @@
 #include <igl/list_to_matrix.h>
+#include <igl/per_face_normals.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <init_position.h>
 #include <particle_property.h>
@@ -78,6 +79,34 @@ int main(int argc, char* argv[]) {
     const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
 
     init_position(particles, corner, num_points, step_size);
+
+    Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
+    Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
+
+    // Corners of the bounding box
+    Eigen::MatrixXd V_wall;
+    V_wall.resize(8, 3);
+    V_wall << m(0), m(1), m(2),
+        M(0), m(1), m(2),
+        M(0), M(1), m(2),
+        m(0), M(1), m(2),
+        m(0), m(1), M(2),
+        M(0), m(1), M(2),
+        M(0), M(1), M(2),
+        m(0), M(1), M(2);
+
+    Eigen::MatrixXi F_wall(6, 3);
+    F_wall << 0, 1, 2,
+            4, 7, 6, 
+            0, 3, 7,
+            6, 2, 1,
+            4, 5, 1,
+            3, 2, 6;
+
+    Eigen::MatrixXd N_wall;
+    igl::per_face_normals(V_wall, F_wall, N_wall); 
+
+
     const auto& reset = [&]() {
         init_position(particles, corner, num_points, step_size);
         viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
@@ -85,7 +114,7 @@ int main(int argc, char* argv[]) {
 
     const auto& move = [&]() {
         // TODO: fill the algorithm
-        simulation_step(particles, double(0.008));
+        simulation_step( particles, V_wall, F_wall, N_wall, double(0.008));
         viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     };
 

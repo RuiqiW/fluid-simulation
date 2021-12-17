@@ -3,9 +3,16 @@
 #include <params.h>
 #include <simulation_step.h>
 #include <kernel_func.h>
+#include <collision_plane.h>
 
 
-void simulation_step(Particles& particles, double dt) {
+void simulation_step(    
+    Particles& particles, 	
+	const Eigen::MatrixXd &V_wall,
+    const Eigen::MatrixXi &F_wall,
+	const Eigen::MatrixXd &N_wall,
+    double dt) {
+
     int N = particles.position.rows();
 
     Eigen::MatrixXd pred_position;
@@ -177,15 +184,13 @@ void simulation_step(Particles& particles, double dt) {
                     } // end iteration over neighbors of a particle
                 } // end z
             } // end y
-        } // end x
-
-
-        // TODO: collision detection and response
-
-
+        } // end x   
 
         // update predicted position
         pred_position += pos_correction;
+
+        // TODO: collision detection and response
+        collision_plane( particles, pred_position, V_wall, F_wall, N_wall);
     }
 
 
