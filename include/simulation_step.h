@@ -2,9 +2,9 @@
 #define SIMULATION_STEP_H
 
 #include <Eigen/Dense>
-#include <particle_sys_data.h>
+#include <particle_property.h>
 #include <vector>
 
-void SIMULATION_step(Particles& particles, double dt);
+void simulation_step(Particles& particles, double dt);
 
 #endif

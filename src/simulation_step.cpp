@@ -1,9 +1,8 @@
 #include <vector>
 #include <iostream>
-#include "particle_sys_data.h"
-#include "params.h"
-#include "simulation_step.h"
-#include "kernel_func.h"
+#include <params.h>
+#include <simulation_step.h>
+#include <kernel_func.h>
 
 
 void simulation_step(Particles& particles, double dt) {
