@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     Particles particles;
     Eigen::Vector3d corner(-1., -1., -1.);
     Eigen::Vector3i num_points(20, 30, 20);
-    double step_size = 0.06;
+    double step_size = 0.054;
     const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
 
     init_position(particles, corner, num_points, step_size);
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     const auto& move = [&]() {
         // TODO: fill the algorithm
-        simulation_step(particles, double(0.01));
+        simulation_step(particles, double(0.008));
         viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     };
 

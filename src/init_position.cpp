@@ -30,5 +30,9 @@ void init_position(
 		}
 	}
 
+	for (int i=0; i < num_V; i++){
+		particles.acceleration.row(i) = Eigen::Vector3d(0.0, -9.8, 0.0);
+	}
+
 	
 }
