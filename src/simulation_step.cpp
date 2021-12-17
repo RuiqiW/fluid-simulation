@@ -51,7 +51,7 @@ void simulation_step(
         Grid[x][y][z].push_back(i);
     }
 
-    //find neighbours
+    // TODO: find neighbours
     // find_neighbors(particles, Grid);
 
     Eigen::MatrixXd pos_correction;
@@ -226,11 +226,8 @@ void simulation_step(
                                                     vij = (particles.velocity.row(p) - particles.velocity.row(index)).transpose() ;
                                                     omega += vij.cross(gradW);
                                                     
-                                                    //update velocity
+                                                    //update change amount in velocity
                                                     double W = poly6(r);
-                                                    
-                                                    // std:: cout << "(C_VISCOSITY * W * vij).size()" << (C_VISCOSITY * W * vij).size() << std::endl;
-                                                    // std:: cout << "particles.velocity.row(index).size()" << particles.velocity.row(index).size() << std::endl;
                                                     delta_v +=  W * vij;
                                                 }
                                             }
@@ -253,6 +250,61 @@ void simulation_step(
 
 
     // TODO: apply vorticity force
+    Eigen::MatrixXd Eta;
+    Eta.resize(N, 3);
+    Eta.setZero();
+    for (int x = 0; x < dim_x; x++) {
+        for (int y = 0; y < dim_y; y++) {
+            for (int z = 0; z < dim_z; z++) {
+                for (int index : Grid[x][y][z]) {
+                    // vorticity omega_index
+                    Eigen::Vector3d cur_omega = vorticity.row(index);
+                    double cur_omega_norm = cur_omega.norm();
+
+                    Eigen::Vector3d cur_eta;
+                    cur_eta.setZero();
+
+                    for (int a = -1; a < 2; a++) {
+                        if (x + a >= 0 && x + a < dim_x) {
+                            for (int b = -1; b < 2; b++) {
+                                if (y + b >= 0 && y + b < dim_y) {
+                                    for (int c = -1; c < 2; c++) {
+                                        if (z + c >= 0 && z + c < dim_z) {
+                                            for (int p : Grid[x + a][y + b][z + c]) {
+                                                if (p == index) continue;
+                                                Eigen::Vector3d d = pred_position.row(index) - pred_position.row(p);
+                                                double r = d.norm();
+                                                if (r < RADIUS) {
+                                                    double lmbd = lambdas(index) + lambdas(p);
+                                                    Eigen::Vector3d gradW;
+                                                    dPoly6(gradW, d, r);
+                                                    cur_eta += gradW * cur_omega_norm;
+                                                
+                                                    
+                                                }
+                                            }
+                                        }
+                                    }  //end c
+                                }
+                            }  //end b
+                        }
+                    }  // end a
+                    
+                    double cur_eta_norm = cur_eta.norm();
+                    particles.acceleration.row(index) = GRAVITY;
+                    if (cur_eta_norm != 0){
+                        Eigen::Vector3d N = cur_eta.normalized();
+                        particles.acceleration.row(index) += EPS_VORTICITY * N.cross(cur_omega);
+                    }
+                    
+                   
+                    
+
+                }  // end iteration over neighbors of a particle
+            }  // end z
+        }   // end y
+    }    // end x
+
 
 
     for (int i = 0; i < N; i++) {
