@@ -1,22 +1,65 @@
 #include <igl/list_to_matrix.h>
 #include <igl/opengl/glfw/Viewer.h>
-#include <Eigen/Core>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <cstdlib>
-
-#include <igl/opengl/glfw/Viewer.h>
 #include <init_position.h>
 #include <particle_property.h>
 #include <simulation_step.h>
 
+#include <Eigen/Core>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
-int main(int argc, char* argv[])
-{
-    igl::opengl::glfw::Viewer viewer;
+// viewer window
+igl::opengl::glfw::Viewer viewer;
+
+// the boundary of box
+// TODO: change color
+void draw_boudary(Particles& particles){
+    // Find the bounding box
+    Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
+    Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
+
+    // Corners of the bounding box
+    Eigen::MatrixXd V_box(8, 3);
+    V_box << m(0), m(1), m(2),
+        M(0), m(1), m(2),
+        M(0), M(1), m(2),
+        m(0), M(1), m(2),
+        m(0), m(1), M(2),
+        M(0), m(1), M(2),
+        M(0), M(1), M(2),
+        m(0), M(1), M(2);
+
+    // Edges of the bounding box
+    viewer.data().add_points(V_box,Eigen::RowVector3d(1,0,0));
+    Eigen::MatrixXi E_box(12, 2);
+    E_box << 0, 1,
+        1, 2,
+        2, 3,
+        3, 0,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 4,
+        0, 4,
+        1, 5,
+        2, 6,
+        7, 3;
+    // Plot the edges of the bounding box
+    for (unsigned i = 0; i < E_box.rows(); ++i) {
+        viewer.data().add_edges(
+            V_box.row(E_box(i, 0)),
+            V_box.row(E_box(i, 1)),
+            Eigen::RowVector3d(1, 0, 0));
+    }
+
+}
+
+int main(int argc, char* argv[]) {
+
     const int xid = viewer.selected_data_index;
     viewer.append_mesh();
 
@@ -63,14 +106,12 @@ int main(int argc, char* argv[])
         return true;
     };
 
+
+    draw_boudary(particles);
     viewer.data_list[xid].set_colors(particle_color);
     viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     viewer.data_list[xid].point_size = 6.0;
     viewer.launch();
 
-    
-
     return EXIT_SUCCESS;
 }
-
-
