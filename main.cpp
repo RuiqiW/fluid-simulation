@@ -1,5 +1,8 @@
 #include <igl/list_to_matrix.h>
 #include <igl/per_face_normals.h>
+#include <igl/AABB.h>
+
+#include <igl/readOBJ.h>
 #include <igl/opengl/glfw/Viewer.h>
 #include <init_position.h>
 #include <particle_property.h>
@@ -18,21 +21,21 @@ igl::opengl::glfw::Viewer viewer;
 
 // the boundary of box
 // TODO: change color
-void draw_boudary(Particles& particles){
-    // Find the bounding box
-    Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
-    Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
+void draw_boudary(const Eigen::MatrixXd &V_box){
+    // // Find the bounding box
+    // Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
+    // Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
 
     // Corners of the bounding box
-    Eigen::MatrixXd V_box(8, 3);
-    V_box << m(0), m(1), m(2),
-        M(0), m(1), m(2),
-        M(0), M(1), m(2),
-        m(0), M(1), m(2),
-        m(0), m(1), M(2),
-        M(0), m(1), M(2),
-        M(0), M(1), M(2),
-        m(0), M(1), M(2);
+    // Eigen::MatrixXd V_box(8, 3);
+    // V_box << m(0), m(1), m(2),
+    //     M(0), m(1), m(2),
+    //     M(0), M(1), m(2),
+    //     m(0), M(1), m(2),
+    //     m(0), m(1), M(2),
+    //     M(0), m(1), M(2),
+    //     M(0), M(1), M(2),
+    //     m(0), M(1), M(2);
 
     // Edges of the bounding box
     viewer.data().add_points(V_box,Eigen::RowVector3d(1,0,0));
@@ -80,8 +83,38 @@ int main(int argc, char* argv[]) {
 
     init_position(particles, corner, num_points, step_size);
 
+    
+    
+    /* Add Bunny */
+    Eigen::MatrixXd V_obj;
+    Eigen::MatrixXi F_obj;
+    igl::readOBJ("../data/coarser_bunny.obj", V_obj, F_obj);
+    V_obj *= 0.005;
+
+    Eigen::VectorXd tmp;
+    tmp.resize(V_obj.rows());
+    tmp.setOnes();
+    tmp *= 2.2;
+    V_obj.col(1) -= tmp ;
+    viewer.data().set_mesh(V_obj,F_obj);
+
+    igl::AABB<Eigen::MatrixXd, 3> tree;
+    tree.init(V_obj,F_obj);
+    // VectorXd sqrD;
+    // VectorXi I;
+    // MatrixXd C;
+    // igl::point_mesh_squared_distance(P,V,F,sqrD,I,C);
+    // tree.squared_distance(V_obj,F_obj,P,sqrD,I,C);
+    // igl::SignedDistanceType type = SIGNED_DISTANCE_TYPE_PSEUDONORMAL;
+    // igl::signed_distance(P,V,F,sign_type,S,I,C,N);
+
+
+
+    /* Add Walls */
     Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
     Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
+
+    m(1) = V_obj.col(1).minCoeff();
 
     // Corners of the bounding box
     Eigen::MatrixXd V_wall;
@@ -114,7 +147,7 @@ int main(int argc, char* argv[]) {
 
     const auto& move = [&]() {
         // TODO: fill the algorithm
-        simulation_step( particles, V_wall, F_wall, N_wall, double(0.008));
+        simulation_step(particles, V_wall, F_wall, N_wall, V_obj, F_obj, tree, double(0.008));
         viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     };
 
@@ -136,7 +169,7 @@ int main(int argc, char* argv[]) {
     };
 
 
-    draw_boudary(particles);
+    draw_boudary(V_wall);
     viewer.data_list[xid].set_colors(particle_color);
     viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     viewer.data_list[xid].point_size = 6.0;

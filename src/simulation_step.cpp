@@ -3,7 +3,6 @@
 #include <params.h>
 #include <simulation_step.h>
 #include <kernel_func.h>
-#include <collision_plane.h>
 
 
 void simulation_step(    
@@ -11,6 +10,9 @@ void simulation_step(
 	const Eigen::MatrixXd &V_wall,
     const Eigen::MatrixXi &F_wall,
 	const Eigen::MatrixXd &N_wall,
+    const Eigen::MatrixXd &V_obj,
+    const Eigen::MatrixXi &F_obj,
+    igl::AABB<Eigen::MatrixXd, 3> &tree,
     double dt) {
 
     int N = particles.position.rows();
@@ -190,6 +192,7 @@ void simulation_step(
         pred_position += pos_correction;
 
         // TODO: collision detection and response
+        collision_mesh(particles, pred_position, V_obj, F_obj, tree);
         collision_plane( particles, pred_position, V_wall, F_wall, N_wall);
     }
 

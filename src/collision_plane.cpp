@@ -25,12 +25,6 @@ void collision_plane(
                 pos -= diff * n;
                 pred_position.row(i) = pos;
             }
-
         }
-
-
     }
-
-        
-
 }
