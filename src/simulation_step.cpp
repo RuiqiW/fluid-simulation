@@ -52,7 +52,7 @@ void simulation_step(
     }
 
     // TODO: find neighbours
-    // find_neighbors(particles, Grid);
+    find_neighbors(particles, pred_position);
 
     Eigen::MatrixXd pos_correction;
     pos_correction.resize(N, 3);

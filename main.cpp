@@ -100,14 +100,6 @@ int main(int argc, char* argv[]) {
 
     igl::AABB<Eigen::MatrixXd, 3> tree;
     tree.init(V_obj,F_obj);
-    // VectorXd sqrD;
-    // VectorXi I;
-    // MatrixXd C;
-    // igl::point_mesh_squared_distance(P,V,F,sqrD,I,C);
-    // tree.squared_distance(V_obj,F_obj,P,sqrD,I,C);
-    // igl::SignedDistanceType type = SIGNED_DISTANCE_TYPE_PSEUDONORMAL;
-    // igl::signed_distance(P,V,F,sign_type,S,I,C,N);
-
 
 
     /* Add Walls */

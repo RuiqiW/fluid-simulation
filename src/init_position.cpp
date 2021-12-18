@@ -32,7 +32,9 @@ void init_position(
 
 	for (int i=0; i < num_V; i++){
 		particles.acceleration.row(i) = Eigen::Vector3d(0.0, -9.8, 0.0);
+		particles.neighbours.push_back(vector<int> ());
 	}
 
+	// particles.neighbours.resize(num_V , vector<int>(num_V));
 	
 }

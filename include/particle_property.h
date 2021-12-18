@@ -3,6 +3,8 @@
 
 #include <Eigen/Dense>
 #include <iostream>
+#include <vector>
+using namespace std;
 
 struct Particles {
     Eigen::MatrixXd position;
@@ -11,7 +13,9 @@ struct Particles {
     // TODO: might need to change the property it has
     Eigen::VectorXd pressure;
     Eigen::VectorXd density;
-    // std::vector<int> neighbours;
+
+    vector<vector<int> > neighbours;
+
 };
 
 #endif
