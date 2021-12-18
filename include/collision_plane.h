@@ -3,13 +3,20 @@
 
 #include <Eigen/Dense>
 #include <particle_property.h>
+#include <boundary_property.h>
+
+// void collision_plane(
+//     Particles& particles,
+//     Eigen::MatrixXd& pred_position,
+//     const Eigen::MatrixXd &V_wall,
+//     const Eigen::MatrixXi &F_wall,
+// 	const Eigen::MatrixXd &N_wall);
 
 
 void collision_plane(
     Particles& particles,
     Eigen::MatrixXd& pred_position,
-    const Eigen::MatrixXd &V_wall,
-    const Eigen::MatrixXi &F_wall,
-	const Eigen::MatrixXd &N_wall);
+    Wall_Plane &wall);
+
 
 #endif

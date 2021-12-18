@@ -1,9 +1,10 @@
-#include <igl/list_to_matrix.h>
-#include <igl/per_face_normals.h>
+#include <boundary_property.h>
 #include <igl/AABB.h>
-
-#include <igl/readOBJ.h>
+#include <igl/list_to_matrix.h>
 #include <igl/opengl/glfw/Viewer.h>
+#include <igl/per_face_normals.h>
+#include <igl/readOBJ.h>
+#include <init_boundaries.h>
 #include <init_position.h>
 #include <particle_property.h>
 #include <simulation_step.h>
@@ -22,7 +23,7 @@ igl::opengl::glfw::Viewer viewer;
 
 // the boundary of box
 // TODO: change color
-void draw_boudary(const Eigen::MatrixXd &V_box){
+void draw_boudary(const Eigen::MatrixXd& V_box) {
     // // Find the bounding box
     // Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
     // Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
@@ -39,7 +40,7 @@ void draw_boudary(const Eigen::MatrixXd &V_box){
     //     m(0), M(1), M(2);
 
     // Edges of the bounding box
-    viewer.data().add_points(V_box,Eigen::RowVector3d(1,0,0));
+    viewer.data().add_points(V_box, Eigen::RowVector3d(1, 0, 0));
     Eigen::MatrixXi E_box(12, 2);
     E_box << 0, 1,
         1, 2,
@@ -60,117 +61,95 @@ void draw_boudary(const Eigen::MatrixXd &V_box){
             V_box.row(E_box(i, 1)),
             Eigen::RowVector3d(1, 0, 0));
     }
-
 }
 
 int main(int argc, char* argv[]) {
+    if (argc <= 2) {
+        const int xid = viewer.selected_data_index;
+        viewer.append_mesh();
 
-    const int xid = viewer.selected_data_index;
-    viewer.append_mesh();
-
-    // TODO: change the wording here
-    std::cout << R"(
+        // TODO: change the wording here
+        std::cout << R"(
           A,a      Move one timestep forward for water simulation. 
           R,r      Reset positions and velocities for all particles.
         )";
 
-    //about position and velocity
-    //starting corner for the fluid particles;
-    Particles particles;
-    Eigen::Vector3d corner(-1., -1., -1.);
-    Eigen::Vector3i num_points(20, 30, 20);
-    double step_size = 0.054;
-    const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
+        //about position and velocity
+        //starting corner for the fluid particles;
+        Particles particles;
+        Eigen::Vector3d corner(-1., -1., -1.);
+        Eigen::Vector3i num_points(20, 30, 20);
+        double step_size = 0.054;
+        const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
 
-    init_position(particles, corner, num_points, step_size);
-
-    
-    /* Add Bunny */
-    Eigen::MatrixXd V_obj;
-    Eigen::MatrixXi F_obj;
-    igl::readOBJ("../data/coarser_bunny.obj", V_obj, F_obj);
-    V_obj *= 0.005;
-
-    Eigen::VectorXd tmp;
-    tmp.resize(V_obj.rows());
-    tmp.setOnes();
-    tmp *= 2.2;
-    V_obj.col(1) -= tmp ;
-    viewer.data().set_mesh(V_obj,F_obj);
-
-    igl::AABB<Eigen::MatrixXd, 3> tree;
-    tree.init(V_obj,F_obj);
-
-    /* Add Walls */
-    Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3*1);
-    Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() +  0.5 *Eigen::VectorXd::Ones(3*1);
-
-
-    m(1) = V_obj.col(1).minCoeff();
-
-
-    // Corners of the bounding box
-    Eigen::MatrixXd V_wall;
-    V_wall.resize(8, 3);
-    V_wall << m(0), m(1), m(2),
-        M(0), m(1), m(2),
-        M(0), M(1), m(2),
-        m(0), M(1), m(2),
-        m(0), m(1), M(2),
-        M(0), m(1), M(2),
-        M(0), M(1), M(2),
-        m(0), M(1), M(2);
-
-    Eigen::MatrixXi F_wall(6, 3);
-    F_wall << 0, 1, 2,
-            4, 7, 6, 
-            0, 3, 7,
-            6, 2, 1,
-            4, 5, 1,
-            3, 2, 6;
-
-    Eigen::MatrixXd N_wall;
-
-
-    igl::per_face_normals(V_wall, F_wall, N_wall); 
-
-
-    const auto& reset = [&]() {
         init_position(particles, corner, num_points, step_size);
-        viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
-    };
 
-    const auto& move = [&]() {
-        // TODO: fill the algorithm
-        simulation_step(particles, V_wall, F_wall, N_wall, V_obj, F_obj, tree, double(0.008));
-        viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
-    };
+        /* Add Walls */
+        std::cout << "Add Walls" << std::endl;
+        Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3 * 1);
+        Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + 0.5 * Eigen::VectorXd::Ones(3 * 1);
 
-    viewer.callback_key_pressed =
-        [&](igl::opengl::glfw::Viewer&, unsigned char key, int) -> bool {
-        switch (key) {
-            case 'A':
-            case 'a':
-                move();
-                break;
-            case 'R':
-            case 'r':
-                reset();
-                break;
-            default:
-                return false;
+        Rabbit_Mesh rabbit;
+        if (argc == 2) {
+            if (argv[1] == std::string("rabbit")) {
+                /* Add Bunny */
+                init_rabbit(rabbit, "../data/coarser_bunny.obj", true);
+                // init_rabbit(rabbit);
+                viewer.data().set_mesh(rabbit.V_obj, rabbit.F_obj);
+                m(1) = rabbit.V_obj.col(1).minCoeff();
+
+            } else {
+                std::cout << "Invalid argument to show the visualization , exiting.\n";
+                exit(1);
+            }
+
         }
-        return true;
-    };
 
+        else if (argc == 1) {
+            init_rabbit(rabbit, "", false);
+        }
 
-    draw_boudary(V_wall);
+        Wall_Plane wall;
+        init_wall(wall, m, M, true);
 
+        igl::per_face_normals(wall.V_wall, wall.F_wall, wall.N_wall);
 
-    viewer.data_list[xid].set_colors(particle_color);
-    viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
-    viewer.data_list[xid].point_size = 6.0;
-    viewer.launch();
+        const auto& reset = [&]() {
+            init_position(particles, corner, num_points, step_size);
+            viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
+        };
 
+        const auto& move = [&]() {
+            // TODO: fill the algorithm
+            simulation_step(particles, wall, rabbit, double(0.008));
+            viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
+        };
+
+        viewer.callback_key_pressed =
+            [&](igl::opengl::glfw::Viewer&, unsigned char key, int) -> bool {
+            switch (key) {
+                case 'A':
+                case 'a':
+                    move();
+                    break;
+                case 'R':
+                case 'r':
+                    reset();
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        };
+
+        std::cout << "draw_boudary" << std::endl;
+        draw_boudary(wall.V_wall);
+        std::cout << "viewer" << std::endl;
+
+        viewer.data_list[xid].set_colors(particle_color);
+        viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
+        viewer.data_list[xid].point_size = 6.0;
+        viewer.launch();
+    }
     return EXIT_SUCCESS;
 }

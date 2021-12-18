@@ -6,16 +6,24 @@
 #include <iostream>
 #include <vector>
 
+// void simulation_step(
+//     Particles &particles,
+//     const Eigen::MatrixXd &V_wall,
+//     const Eigen::MatrixXi &F_wall,
+//     const Eigen::MatrixXd &N_wall,
+//     const Eigen::MatrixXd &V_obj,
+//     const Eigen::MatrixXi &F_obj,
+//     igl::AABB<Eigen::MatrixXd, 3> &tree,
+//     double dt) {
 void simulation_step(
     Particles &particles,
-    const Eigen::MatrixXd &V_wall,
-    const Eigen::MatrixXi &F_wall,
-    const Eigen::MatrixXd &N_wall,
-    const Eigen::MatrixXd &V_obj,
-    const Eigen::MatrixXi &F_obj,
-    igl::AABB<Eigen::MatrixXd, 3> &tree,
+    Wall_Plane &wall,
+    Rabbit_Mesh &rabbit,
     double dt) {
+
     int N = particles.position.rows();
+    
+
 
     Eigen::MatrixXd pred_position;
     pred_position.resize(N, 3);
@@ -179,8 +187,13 @@ void simulation_step(
         pred_position += pos_correction;
 
         // TODO: collision detection and response
-        collision_mesh(particles, pred_position, V_obj, F_obj, tree);
-        collision_plane(particles, pred_position, V_wall, F_wall, N_wall);
+        if (rabbit.isUsed){
+            collision_mesh(particles, pred_position, rabbit);
+        }
+        if (wall.isUsed){
+            collision_plane(particles, pred_position, wall);
+        }
+        
     }
 
     // update velocity

@@ -4,14 +4,25 @@
 #include <Eigen/Dense>
 #include <particle_property.h>
 #include <igl/AABB.h>
+#include <boundary_property.h>
 
+
+// void collision_mesh(
+//     Particles& particles,
+//     Eigen::MatrixXd& pred_position,
+//     const Eigen::MatrixXd &V_obj,
+//     const Eigen::MatrixXi &F_obj,
+//     igl::AABB<Eigen::MatrixXd, 3> &tree
+// );
 
 void collision_mesh(
     Particles& particles,
     Eigen::MatrixXd& pred_position,
-    const Eigen::MatrixXd &V_obj,
-    const Eigen::MatrixXi &F_obj,
-    igl::AABB<Eigen::MatrixXd, 3> &tree
+    Rabbit_Mesh &rabbit
 );
+
+
+
+
 
 #endif
