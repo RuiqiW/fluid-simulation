@@ -1,8 +1,8 @@
 #include <init_position.h>
 void init_position(
-	Particles& particles,
-	Eigen::Vector3d& corner,
-	Eigen::Vector3i& num_points,
+	Particles &particles,
+	Eigen::Vector3d &corner,
+	Eigen::Vector3i &num_points,
 	double step
 ) {
 	

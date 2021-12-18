@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+using namespace std;
 
 // viewer window
 igl::opengl::glfw::Viewer viewer;
@@ -84,7 +85,6 @@ int main(int argc, char* argv[]) {
     init_position(particles, corner, num_points, step_size);
 
     
-    
     /* Add Bunny */
     Eigen::MatrixXd V_obj;
     Eigen::MatrixXi F_obj;
@@ -101,12 +101,13 @@ int main(int argc, char* argv[]) {
     igl::AABB<Eigen::MatrixXd, 3> tree;
     tree.init(V_obj,F_obj);
 
-
     /* Add Walls */
-    Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
-    Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
+    Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3*1);
+    Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() +  0.5 *Eigen::VectorXd::Ones(3*1);
+
 
     m(1) = V_obj.col(1).minCoeff();
+
 
     // Corners of the bounding box
     Eigen::MatrixXd V_wall;
@@ -129,6 +130,8 @@ int main(int argc, char* argv[]) {
             3, 2, 6;
 
     Eigen::MatrixXd N_wall;
+
+
     igl::per_face_normals(V_wall, F_wall, N_wall); 
 
 
@@ -162,6 +165,8 @@ int main(int argc, char* argv[]) {
 
 
     draw_boudary(V_wall);
+
+
     viewer.data_list[xid].set_colors(particle_color);
     viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
     viewer.data_list[xid].point_size = 6.0;
