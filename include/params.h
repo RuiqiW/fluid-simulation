@@ -17,5 +17,5 @@
 
 //for XSPH viscosity
 #define C_VISCOSITY 0.0001
-#define EPS_VORTICITY 0.0001
+#define EPS_VORTICITY 1.0
 #endif
