@@ -6,15 +6,7 @@
 #include <iostream>
 #include <vector>
 
-// void simulation_step(
-//     Particles &particles,
-//     const Eigen::MatrixXd &V_wall,
-//     const Eigen::MatrixXi &F_wall,
-//     const Eigen::MatrixXd &N_wall,
-//     const Eigen::MatrixXd &V_obj,
-//     const Eigen::MatrixXi &F_obj,
-//     igl::AABB<Eigen::MatrixXd, 3> &tree,
-//     double dt) {
+
 void simulation_step(
     Particles &particles,
     Wall_Plane &wall,
@@ -29,13 +21,11 @@ void simulation_step(
     pred_position.resize(N, 3);
 
     // apply forces and prediction positions
-    for (int i = 0; i < N; i++) {
-        particles.velocity.row(i) += dt * particles.acceleration.row(i);
-        pred_position.row(i) = particles.position.row(i) + dt * particles.velocity.row(i);
-    }
+    particles.velocity += dt * particles.acceleration;
+    pred_position = particles.position + dt * particles.velocity;
+
 
     // binning particles based on predicted position
-
     double min_x = pred_position.col(0).minCoeff();
     double min_y = pred_position.col(1).minCoeff();
     double min_z = pred_position.col(2).minCoeff();
@@ -69,10 +59,6 @@ void simulation_step(
     lambdas.resize(N);
 
     for (int iter = 0; iter < ITERS; iter++) {
-        // Eigen::VectorXd densities;
-        // densities.resize(N);
-        // densities.setZero();
-        // particles.density.setZero();
 
         Eigen::VectorXd dC2;
         dC2.resize(N);
@@ -257,8 +243,7 @@ void simulation_step(
 
     particles.velocity += velocity_change;
 
-    std::cout << particles.density.minCoeff() << " " << particles.density.maxCoeff() << "\n";
-
+    // std::cout << particles.density.minCoeff() << " " << particles.density.maxCoeff() << "\n";
 
     for (int x = 0; x < dim_x; x++) {
         for (int y = 0; y < dim_y; y++) {

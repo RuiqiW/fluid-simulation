@@ -19,27 +19,13 @@
 using namespace std;
 
 // choose whether it should be animation
-bool isAnimation = false;
+bool isAnimation = true;
 // viewer window
 igl::opengl::glfw::Viewer viewer;
 
 // the boundary of box
 // TODO: change color
 void draw_boudary(const Eigen::MatrixXd& V_box) {
-    // // Find the bounding box
-    // Eigen::Vector3d m = particles.position.colwise().minCoeff() - 0.5 * Eigen::VectorXd::Ones(3*1);
-    // Eigen::Vector3d M = particles.position.colwise().maxCoeff() + 0.5 * Eigen::VectorXd::Ones(3*1);
-
-    // Corners of the bounding box
-    // Eigen::MatrixXd V_box(8, 3);
-    // V_box << m(0), m(1), m(2),
-    //     M(0), m(1), m(2),
-    //     M(0), M(1), m(2),
-    //     m(0), M(1), m(2),
-    //     m(0), m(1), M(2),
-    //     M(0), m(1), M(2),
-    //     M(0), M(1), M(2),
-    //     m(0), M(1), M(2);
 
     // Edges of the bounding box
     viewer.data().add_points(V_box, Eigen::RowVector3d(1, 0, 0));
@@ -163,6 +149,7 @@ int main(int argc, char* argv[]) {
                 // Create orbiting animation
                 simulation_step(particles, wall, rabbit, double(0.008));
                 viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
+                return false;
             };
             
         }
