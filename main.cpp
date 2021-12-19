@@ -86,8 +86,8 @@ int main(int argc, char* argv[]) {
 
         /* Add Walls */
         std::cout << "Add Walls" << std::endl;
-        Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3 * 1);
-        Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + 0.5 * Eigen::VectorXd::Ones(3 * 1);
+        Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3);
+        Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + 1.5 * Eigen::VectorXd::Ones(3);
 
         Rabbit_Mesh rabbit;
         if (argc == 2) {

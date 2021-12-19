@@ -60,7 +60,7 @@ void simulation_step(
     }
 
     // TODO: find neighbours
-    find_neighbors(particles, pred_position);
+    // find_neighbors(particles, pred_position);
 
     Eigen::MatrixXd pos_correction;
     pos_correction.resize(N, 3);
@@ -69,19 +69,14 @@ void simulation_step(
     lambdas.resize(N);
 
     for (int iter = 0; iter < ITERS; iter++) {
-        Eigen::VectorXd densities;
-        densities.resize(N);
-        densities.setZero();
+        // Eigen::VectorXd densities;
+        // densities.resize(N);
+        // densities.setZero();
+        // particles.density.setZero();
 
-        // sum of dW^2 for neighboring particles
-        Eigen::VectorXd dWj2;
-        dWj2.resize(N);
-        dWj2.setZero();
-
-        // sum of dW for particle i
-        Eigen::MatrixXd dW;
-        dW.resize(N, 3);
-        dW.setZero();
+        Eigen::VectorXd dC2;
+        dC2.resize(N);
+        dC2.setZero();
 
         // loop over grid
         for (int x = 0; x < dim_x; x++) {
@@ -90,10 +85,10 @@ void simulation_step(
                     for (int index : Grid[x][y][z]) {
                         double density = 0;  // Rho
 
-                        Eigen::Vector3d grad;  // dW / dpi
-                        grad.setZero();
+                        Eigen::Vector3d gradI;  // dW / dpi
+                        gradI.setZero();
 
-                        double sqr_norm_sum = 0;  // sum |dW / dpj|^2
+                        double sum = 0;  // sum |dW / dpj|^2
 
                         for (int a = -1; a < 2; a++) {
                             if (x + a >= 0 && x + a < dim_x) {
@@ -107,10 +102,13 @@ void simulation_step(
                                                     double r = d.norm();
                                                     if (r < RADIUS) {
                                                         density += poly6(r);
-                                                        Eigen::Vector3d tmp;
-                                                        dPoly6(tmp, d, r);
-                                                        grad += tmp;
-                                                        sqr_norm_sum += tmp.squaredNorm();
+                                                        
+                                                        Eigen::Vector3d gradJ;
+                                                        dSpiky(gradJ, d, r);
+                                                        gradJ /= RHO_REST;
+                                                        gradI += gradJ;
+                                                        sum += gradJ.squaredNorm();
+                                                        
                                                     }
                                                 }
                                             }
@@ -120,24 +118,20 @@ void simulation_step(
                             }
                         }  // end a
 
-                        densities(index) = density;
-                        dWj2(index) = sqr_norm_sum;
-                        dW.row(index) = grad;
+                        particles.density(index) = density + poly6(0.0);
+                        dC2(index) = sum + gradI.squaredNorm();
                     }  // end iteration over neighbors of a particle
-                }      // end z
-            }          // end y
-        }              // end x
+                }  // end z
+            }  // end y
+        }  // end x
 
-        // calculate lambda
+
+        /* calculate lambda */
         for (int i = 0; i < N; i++) {
-            double Ci = densities(i) * 1.0 / RHO_REST - 1.0;
-
-            double dC2 = (dWj2(i) + dW.row(i).squaredNorm()) / std::pow(RHO_REST, 2.0);
-            // add relaxation parameter
-            dC2 += CFM_EPS;
-
-            lambdas(i) = -Ci / dC2;
+            double Ci = std::max(particles.density(i) * 1.0 / RHO_REST - 1.0, 0.0);
+            lambdas(i) = -1.0 * Ci / (dC2(i) + CFM_EPS);
         }
+
 
         double W_delta_q = poly6(P_RADIUS);
 
@@ -162,7 +156,7 @@ void simulation_step(
                                                     if (r < RADIUS) {
                                                         double lmbd = lambdas(index) + lambdas(p);
                                                         Eigen::Vector3d gradW;
-                                                        dPoly6(gradW, d, r);
+                                                        dSpiky(gradW, d, r);
 
                                                         double W = poly6(r);
                                                         double scorr = -P_CONST * std::pow(W / W_delta_q, P_POWER);
@@ -176,15 +170,16 @@ void simulation_step(
                             }
                         }  // end a
 
-                        diff_pos = (1.0 / RHO_REST) * diff_pos;
+                        diff_pos /=  RHO_REST;
                         pos_correction.row(index) = diff_pos;
                     }  // end iteration over neighbors of a particle
-                }      // end z
-            }          // end y
-        }              // end x
+                }  // end z
+            }  // end y
+        }  // end x
 
         // update predicted position
-        pred_position += pos_correction;
+        pred_position += pos_correction;              
+
 
         // TODO: collision detection and response
         if (rabbit.isUsed){
@@ -197,29 +192,30 @@ void simulation_step(
     }
 
     // update velocity
-    // TODO: change it from = to +=
-    particles.velocity = (1.0 / dt) * (pred_position - particles.position);
+    particles.velocity = (pred_position - particles.position) / dt;    
+    
+    // update position
+    particles.position = pred_position;
 
-
-    /* apply vorticity confinement and XSPH viscosity 
-    */
+    
+    /* apply vorticity confinement and XSPH viscosity */
     Eigen::MatrixXd vorticity;
     vorticity.resize(N, 3);
-    vorticity.setZero();
 
     Eigen::MatrixXd velocity_change;
     velocity_change.resize(N, 3);
-    velocity_change.setZero();
+
     for (int x = 0; x < dim_x; x++) {
         for (int y = 0; y < dim_y; y++) {
             for (int z = 0; z < dim_z; z++) {
                 for (int index : Grid[x][y][z]) {
-                    // vorticity omega_index
-                    Eigen::Vector3d omega;
-                    omega.setZero();
+                    
                     Eigen::Vector3d delta_v;
                     delta_v.setZero();
 
+                    Eigen::Vector3d omega;
+                    omega.setZero();
+
                     for (int a = -1; a < 2; a++) {
                         if (x + a >= 0 && x + a < dim_x) {
                             for (int b = -1; b < 2; b++) {
@@ -231,17 +227,16 @@ void simulation_step(
                                                 Eigen::Vector3d d = pred_position.row(index) - pred_position.row(p);
                                                 double r = d.norm();
                                                 if (r < RADIUS) {
-                                                    double lmbd = lambdas(index) + lambdas(p);
-                                                    Eigen::Vector3d gradW;
-                                                    dPoly6(gradW, d, r);
                                                     Eigen::Vector3d vij;
-                                                    // TODO: check the velocity should be the one updated in Tensile Instability step
-                                                    vij = (particles.velocity.row(p) - particles.velocity.row(index)).transpose() ;
-                                                    omega += vij.cross(gradW);
-                                                    
+                                                    vij = particles.velocity.row(p) - particles.velocity.row(index);
+
                                                     //update change amount in velocity
-                                                    double W = poly6(r);
+                                                    double W = spiky(r);
                                                     delta_v +=  W * vij;
+
+                                                    Eigen::Vector3d gradW;
+                                                    dSpiky(gradW, d, r);
+                                                    omega += vij.cross(gradW);
                                                 }
                                             }
                                         }
@@ -251,10 +246,8 @@ void simulation_step(
                         }
                     }  // end a
 
+                    velocity_change.row(index) = C_VISCOSITY * delta_v;
                     vorticity.row(index) = omega;
-                    velocity_change.row(index) = C_VISCOSITY * delta_v.transpose();
-                   
-                    
 
                 }  // end iteration over neighbors of a particle
             }  // end z
@@ -262,21 +255,21 @@ void simulation_step(
     }    // end x
 
 
-    // TODO: apply vorticity force
-    Eigen::MatrixXd Eta;
-    Eta.resize(N, 3);
-    Eta.setZero();
+    particles.velocity += velocity_change;
+
+    std::cout << particles.density.minCoeff() << " " << particles.density.maxCoeff() << "\n";
+
+
     for (int x = 0; x < dim_x; x++) {
         for (int y = 0; y < dim_y; y++) {
             for (int z = 0; z < dim_z; z++) {
                 for (int index : Grid[x][y][z]) {
-                    // vorticity omega_index
-                    Eigen::Vector3d cur_omega = vorticity.row(index);
-                    double cur_omega_norm = cur_omega.norm();
+                    Eigen::Vector3d omega = vorticity.row(index);
+                    double omega_norm = omega.norm();
 
-                    Eigen::Vector3d cur_eta;
-                    cur_eta.setZero();
-
+                    Eigen::Vector3d eta;
+                    eta.setZero();
+                    
                     for (int a = -1; a < 2; a++) {
                         if (x + a >= 0 && x + a < dim_x) {
                             for (int b = -1; b < 2; b++) {
@@ -288,11 +281,9 @@ void simulation_step(
                                                 Eigen::Vector3d d = pred_position.row(index) - pred_position.row(p);
                                                 double r = d.norm();
                                                 if (r < RADIUS) {
-                                                    double lmbd = lambdas(index) + lambdas(p);
                                                     Eigen::Vector3d gradW;
-                                                    dPoly6(gradW, d, r);
-                                                    cur_eta += gradW * cur_omega_norm;
-                                                
+                                                    dSpiky(gradW, d, r);
+                                                    eta += (-gradW) * omega_norm;
                                                     
                                                 }
                                             }
@@ -302,32 +293,18 @@ void simulation_step(
                             }  //end b
                         }
                     }  // end a
-                    
-                    double cur_eta_norm = cur_eta.norm();
+
                     particles.acceleration.row(index) = GRAVITY;
-                    if (cur_eta_norm != 0){
-                        Eigen::Vector3d N = cur_eta.normalized();
-                        particles.acceleration.row(index) += EPS_VORTICITY * N.cross(cur_omega);
+                    Eigen::Vector3d f_vorticity;
+
+                    if(eta.norm() != 0){
+                        f_vorticity = EPS_VORTICITY * (eta.normalized()).cross(omega);
+                        particles.acceleration.row(index) += f_vorticity / particles.density(index);
                     }
-                    
-                   
-                    
 
                 }  // end iteration over neighbors of a particle
             }  // end z
         }   // end y
     }    // end x
-
-
-
-    for (int i = 0; i < N; i++) {
-        //update velocity
-        particles.velocity.row(i) += velocity_change.row(i);
-        
-    }
-    
-
-    // update position
-    particles.position = pred_position;
 
 }
