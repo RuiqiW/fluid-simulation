@@ -268,7 +268,7 @@ void simulation_step(
                                                 if (r < RADIUS) {
                                                     Eigen::Vector3d gradW;
                                                     dSpiky(gradW, d, r);
-                                                    eta += (-gradW) * omega_norm;
+                                                    eta += gradW * omega_norm;
                                                     
                                                 }
                                             }
