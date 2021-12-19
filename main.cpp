@@ -18,6 +18,8 @@
 #include <vector>
 using namespace std;
 
+// choose whether it should be animation
+bool isAnimation = false;
 // viewer window
 igl::opengl::glfw::Viewer viewer;
 
@@ -128,22 +130,25 @@ int main(int argc, char* argv[]) {
             viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
         };
 
-        viewer.callback_key_pressed =
-            [&](igl::opengl::glfw::Viewer&, unsigned char key, int) -> bool {
-            switch (key) {
-                case 'A':
-                case 'a':
-                    move();
-                    break;
-                case 'R':
-                case 'r':
-                    reset();
-                    break;
-                default:
-                    return false;
-            }
-            return true;
-        };
+        if (isAnimation == false) {
+            viewer.callback_key_pressed =
+                [&](igl::opengl::glfw::Viewer&, unsigned char key, int) -> bool {
+                switch (key) {
+                    case 'A':
+                    case 'a':
+
+                        move();
+                        break;
+                    case 'R':
+                    case 'r':
+                        reset();
+                        break;
+                    default:
+                        return false;
+                }
+                return true;
+            };
+        }
 
         std::cout << "draw_boudary" << std::endl;
         // draw_boudary(wall.V_wall);
@@ -152,6 +157,15 @@ int main(int argc, char* argv[]) {
         viewer.data_list[xid].set_colors(particle_color);
         viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
         viewer.data_list[xid].point_size = 6.0;
+
+        if (isAnimation) {
+            viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) -> bool {
+                // Create orbiting animation
+                simulation_step(particles, wall, rabbit, double(0.008));
+                viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
+            };
+            
+        }
         viewer.launch();
     }
     return EXIT_SUCCESS;
