@@ -231,7 +231,7 @@ void simulation_step(
                                                     vij = particles.velocity.row(p) - particles.velocity.row(index);
 
                                                     //update change amount in velocity
-                                                    double W = spiky(r);
+                                                    double W = poly6(r);
                                                     delta_v +=  W * vij;
 
                                                     Eigen::Vector3d gradW;

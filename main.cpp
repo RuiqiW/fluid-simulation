@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         //starting corner for the fluid particles;
         Particles particles;
         Eigen::Vector3d corner(-1., -1., -1.);
-        Eigen::Vector3i num_points(20, 30, 20);
+        Eigen::Vector3i num_points(20, 20, 20);
         double step_size = 0.054;
         const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
 
@@ -86,8 +86,11 @@ int main(int argc, char* argv[]) {
 
         /* Add Walls */
         std::cout << "Add Walls" << std::endl;
-        Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - 0.5 * Eigen::VectorXd::Ones(3);
-        Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + 1.5 * Eigen::VectorXd::Ones(3);
+        Eigen::Vector3d dm, dM;
+        dm << 0.2, 1.0, 1.0;
+        dM << 1.5, 0.5, 1.0;
+        Eigen::Vector3d m = particles.position.colwise().minCoeff().transpose() - dm;
+        Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + dM;
 
         Rabbit_Mesh rabbit;
         if (argc == 2) {
@@ -143,7 +146,7 @@ int main(int argc, char* argv[]) {
         };
 
         std::cout << "draw_boudary" << std::endl;
-        draw_boudary(wall.V_wall);
+        // draw_boudary(wall.V_wall);
         std::cout << "viewer" << std::endl;
 
         viewer.data_list[xid].set_colors(particle_color);
