@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
         //about position and velocity
         //starting corner for the fluid particles;
         Particles particles;
-        Eigen::Vector3d corner(-1., -1., -1.);
+        Eigen::Vector3d corner(-1., -0.2, -1.);
         Eigen::Vector3i num_points(20, 20, 20);
         double step_size = 0.054;
         const Eigen::RowVector3d particle_color(0.1, 0.9, 0.9);
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
 
         const auto& move = [&]() {
             // TODO: fill the algorithm
-            simulation_step(particles, wall, rabbit, double(0.008));
+            simulation_step(particles, wall, rabbit, double(0.016));
             viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
         };
 
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
         if (isAnimation) {
             viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer&) -> bool {
                 // Create orbiting animation
-                simulation_step(particles, wall, rabbit, double(0.008));
+                simulation_step(particles, wall, rabbit, double(0.016));
                 viewer.data_list[xid].set_points(particles.position, (1. - (1. - particle_color.array()) * .9));
                 return false;
             };

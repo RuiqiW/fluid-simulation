@@ -185,13 +185,13 @@ void simulation_step(
 
     
     /* apply vorticity confinement and XSPH viscosity */
-    // Eigen::MatrixXd vorticity;
-    // vorticity.resize(N, 3);
+    Eigen::MatrixXd vorticity;
+    vorticity.resize(N, 3);
 
-    Eigen::Vector3d dx, dy, dz;
-    dx << DELTA, 0.0, 0.0;
-    dy << 0.0, DELTA, 0.0;
-    dz << 0.0, 0.0, DELTA;
+    // Eigen::Vector3d dx, dy, dz;
+    // dx << DELTA, 0.0, 0.0;
+    // dy << 0.0, DELTA, 0.0;
+    // dz << 0.0, 0.0, DELTA;
 
     Eigen::MatrixXd velocity_change;
     velocity_change.resize(N, 3);
@@ -230,17 +230,17 @@ void simulation_step(
 
                                                     Eigen::Vector3d gradW;
                                                     dSpiky(gradW, d, r);
-                                                    omega += vij.cross(gradW);
+                                                    omega += vij.cross(gradW) / particles.density(p);
 
-                                                    Eigen::Vector3d gradWdx, gradWdy, gradWdz;
-                                                    dSpiky(gradWdx, d+dx, (d+dx).norm());
-                                                    omegaDx += vij.cross(gradWdx);
+                                                    // Eigen::Vector3d gradWdx, gradWdy, gradWdz;
+                                                    // dSpiky(gradWdx, d+dx, (d+dx).norm());
+                                                    // omegaDx += vij.cross(gradWdx);
 
-                                                    dSpiky(gradWdy, d+dy, (d+dy).norm());
-                                                    omegaDz += vij.cross(gradWdy);
+                                                    // dSpiky(gradWdy, d+dy, (d+dy).norm());
+                                                    // omegaDz += vij.cross(gradWdy);
 
-                                                    dSpiky(gradWdz, d+dz, (d+dz).norm());
-                                                    omegaDz += vij.cross(gradWdz);
+                                                    // dSpiky(gradWdz, d+dz, (d+dz).norm());
+                                                    // omegaDz += vij.cross(gradWdz);
                                                 }
                                             }
                                         }
@@ -251,22 +251,22 @@ void simulation_step(
                     }  // end a
 
                     velocity_change.row(index) = C_VISCOSITY * delta_v;
-                    // vorticity.row(index) = omega;
+                    vorticity.row(index) = omega;
 
-                    double len = omega.norm();
-                    Eigen::Vector3d eta;
-                    eta(0) = omegaDx.norm() - len;
-                    eta(1) = omegaDy.norm() - len;
-                    eta(2) = omegaDz.norm() - len;
+                    // double len = omega.norm();
+                    // Eigen::Vector3d eta;
+                    // eta(0) = omegaDx.norm() - len;
+                    // eta(1) = omegaDy.norm() - len;
+                    // eta(2) = omegaDz.norm() - len;
                     
-                    particles.acceleration.row(index) = GRAVITY;
+                    // particles.acceleration.row(index) = GRAVITY;
 
-                    Eigen::Vector3d f_vorticity;
+                    // Eigen::Vector3d f_vorticity;
                     
-                    if(eta.norm() != 0){
-                        f_vorticity = EPS_VORTICITY * (eta.normalized()).cross(omega);
-                        particles.acceleration.row(index) += f_vorticity / particles.density(index);
-                    }
+                    // if(eta.norm() != 0){
+                    //     f_vorticity = EPS_VORTICITY * (eta.normalized()).cross(omega);
+                    //     particles.acceleration.row(index) += f_vorticity / particles.density(index);
+                    // }
 
                 }  // end iteration over neighbors of a particle
             }  // end z
@@ -276,53 +276,57 @@ void simulation_step(
 
     particles.velocity += velocity_change;
 
+    Eigen::VectorXd vorticity_scale = vorticity.rowwise().norm();
+    vorticity_scale = vorticity_scale.cwiseQuotient(particles.density);
+
     // std::cout << particles.density.minCoeff() << " " << particles.density.maxCoeff() << "\n";
 
-    // for (int x = 0; x < dim_x; x++) {
-    //     for (int y = 0; y < dim_y; y++) {
-    //         for (int z = 0; z < dim_z; z++) {
-    //             for (int index : Grid[x][y][z]) {
-    //                 Eigen::Vector3d omega = vorticity.row(index);
-    //                 double omega_norm = omega.norm();
+    for (int x = 0; x < dim_x; x++) {
+        for (int y = 0; y < dim_y; y++) {
+            for (int z = 0; z < dim_z; z++) {
+                for (int index : Grid[x][y][z]) {
+                    Eigen::Vector3d omega = vorticity.row(index);
+                    // double omega_norm = omega.norm();
 
-    //                 Eigen::Vector3d eta;
-    //                 eta.setZero();
+                    Eigen::Vector3d eta;
+                    eta.setZero();
                     
-    //                 for (int a = -1; a < 2; a++) {
-    //                     if (x + a >= 0 && x + a < dim_x) {
-    //                         for (int b = -1; b < 2; b++) {
-    //                             if (y + b >= 0 && y + b < dim_y) {
-    //                                 for (int c = -1; c < 2; c++) {
-    //                                     if (z + c >= 0 && z + c < dim_z) {
-    //                                         for (int p : Grid[x + a][y + b][z + c]) {
-    //                                             if (p == index) continue;
-    //                                             Eigen::Vector3d d = pred_position.row(index) - pred_position.row(p);
-    //                                             double r = d.norm();
-    //                                             if (r < RADIUS) {
-    //                                                 Eigen::Vector3d gradW;
-    //                                                 dSpiky(gradW, d, r);
-    //                                                 eta += gradW * omega_norm;
+                    for (int a = -1; a < 2; a++) {
+                        if (x + a >= 0 && x + a < dim_x) {
+                            for (int b = -1; b < 2; b++) {
+                                if (y + b >= 0 && y + b < dim_y) {
+                                    for (int c = -1; c < 2; c++) {
+                                        if (z + c >= 0 && z + c < dim_z) {
+                                            for (int p : Grid[x + a][y + b][z + c]) {
+                                                if (p == index) continue;
+                                                Eigen::Vector3d d = pred_position.row(index) - pred_position.row(p);
+                                                double r = d.norm();
+                                                if (r < RADIUS) {
+                                                    Eigen::Vector3d gradW;
+                                                    dSpiky(gradW, d, r);
+                                                    // eta += gradW * omega_norm;
+                                                    eta += gradW * vorticity_scale(p);
                                                     
-    //                                             }
-    //                                         }
-    //                                     }
-    //                                 }  //end c
-    //                             }
-    //                         }  //end b
-    //                     }
-    //                 }  // end a
+                                                }
+                                            }
+                                        }
+                                    }  //end c
+                                }
+                            }  //end b
+                        }
+                    }  // end a
 
-    //                 particles.acceleration.row(index) = GRAVITY;
-    //                 Eigen::Vector3d f_vorticity;
+                    particles.acceleration.row(index) = GRAVITY;
+                    Eigen::Vector3d f_vorticity;
 
-    //                 if(eta.norm() != 0){
-    //                     f_vorticity = EPS_VORTICITY * (eta.normalized()).cross(omega);
-    //                     particles.acceleration.row(index) += f_vorticity / particles.density(index);
-    //                 }
+                    if(eta.norm() != 0){
+                        f_vorticity = EPS_VORTICITY * (eta.normalized()).cross(omega);
+                        particles.acceleration.row(index) += f_vorticity;
+                    }
 
-    //             }  // end iteration over neighbors of a particle
-    //         }  // end z
-    //     }   // end y
-    // }    // end x
+                }  // end iteration over neighbors of a particle
+            }  // end z
+        }   // end y
+    }    // end x
 
 }
