@@ -15,7 +15,7 @@ void init_position(
 	particles.acceleration.resize(num_V, 3);
 	particles.acceleration.setZero();
 
-	particles.pressure.resize(num_V);
+
 	particles.density.resize(num_V);
 
 

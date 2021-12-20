@@ -11,7 +11,6 @@ struct Particles {
     Eigen::MatrixXd velocity;
     Eigen::MatrixXd acceleration;
     // TODO: might need to change the property it has
-    Eigen::VectorXd pressure;
     Eigen::VectorXd density;
 
     vector<vector<int> > neighbours;
