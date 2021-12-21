@@ -38,6 +38,6 @@ If you choose the visualization without animation, press "n/N" to get to the nex
 See <a href="https://github.com/RuiqiW/csc417-project/blob/main/CSC417_Report.pdf">paper.pdf</a>
 
 
-##Video
- <a href="https://www.youtube.com/watch?v=giiSKnSnsi8"> Final project video </a> 
+## Video
+<a href="https://www.youtube.com/watch?v=giiSKnSnsi8"> Final project video </a> 
 
