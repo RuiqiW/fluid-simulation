@@ -34,7 +34,7 @@ If you choose the visualization without animation, press "n/N" to get to the nex
 
 
 ## Report 
-See <a href="">paper.pdf</a>
+See <a href="https://github.com/RuiqiW/csc417-project/blob/main/CSC417_Report.pdf">paper.pdf</a>
 
 
 ## Video
