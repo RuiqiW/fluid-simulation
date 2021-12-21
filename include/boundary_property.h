@@ -9,15 +9,15 @@ using namespace std;
 struct Wall_Plane {
     bool isUsed;
     Eigen::MatrixXd V_wall; // Corners of the bounding box
-    Eigen::MatrixXd N_wall;
-    Eigen::MatrixXi F_wall;
+    Eigen::MatrixXd N_wall; // normal of the each face that wall consists of 
+    Eigen::MatrixXi F_wall; 
 
 };
 
 struct Rabbit_Mesh {
     bool isUsed;
-    Eigen::MatrixXd V_obj;
-    Eigen::MatrixXi F_obj; 
+    Eigen::MatrixXd V_obj; // vertex of rabbit
+    Eigen::MatrixXi F_obj; // face of rabbit
     igl::AABB<Eigen::MatrixXd, 3> tree;
 
 };

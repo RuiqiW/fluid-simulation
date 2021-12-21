@@ -18,8 +18,7 @@
 #include <vector>
 using namespace std;
 
-// choose whether it should be animation
-bool isAnimation = true;
+
 // viewer window
 igl::opengl::glfw::Viewer viewer;
 
@@ -52,14 +51,26 @@ void draw_boudary(const Eigen::MatrixXd& V_box) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc <= 2) {
+    if (argc <= 3 && argc >=2) {
+        // choose whether it should be animation
+        bool isAnimation;
+        if (argv[1] == std::string("y")) {
+            isAnimation = true;
+        }else if (argv[1] == std::string("n")) {
+            // choose whether it should be animation
+            isAnimation = false;
+        }
+        else{
+            std::cout << "Invalid argument to show the visualization , exiting.\n";
+            exit(1);
+        }
         const int xid = viewer.selected_data_index;
         viewer.append_mesh();
 
         // TODO: change the wording here
         std::cout << R"(
-          A,a      Move one timestep forward for water simulation. 
-          R,r      Reset positions and velocities for all particles.
+          N,n      Get to the next timestep for fluid simulation. 
+          R,r      Reset all particles' positions and velocities.
         )";
 
         //about position and velocity
@@ -81,8 +92,8 @@ int main(int argc, char* argv[]) {
         Eigen::Vector3d M = particles.position.colwise().maxCoeff().transpose() + dM;
 
         Rabbit_Mesh rabbit;
-        if (argc == 2) {
-            if (argv[1] == std::string("rabbit")) {
+        if (argc == 3) {
+            if (argv[2] == std::string("rabbit")) {
                 /* Add Bunny */
                 init_rabbit(rabbit, "../data/coarser_bunny.obj", true);
                 // init_rabbit(rabbit);
@@ -96,7 +107,7 @@ int main(int argc, char* argv[]) {
 
         }
 
-        else if (argc == 1) {
+        else if (argc == 2) {
             init_rabbit(rabbit, "", false);
         }
 
@@ -120,8 +131,8 @@ int main(int argc, char* argv[]) {
             viewer.callback_key_pressed =
                 [&](igl::opengl::glfw::Viewer&, unsigned char key, int) -> bool {
                 switch (key) {
-                    case 'A':
-                    case 'a':
+                    case 'N':
+                    case 'n':
 
                         move();
                         break;
