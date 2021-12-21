@@ -1,6 +1,6 @@
 # CSC417 Final Project
 ## Install
-Check out the repo <a href="https://github.com/dilevin/CSC417-a1-mass-spring-1d"> for installation</a> that is required for this project
+Check out the repo for <a href="https://github.com/dilevin/CSC417-a1-mass-spring-1d"> installation</a> that is required for this project
 
 ## Execution
 After compiling the project, you can run the following command inside the `build/` folder to see the simulation of 2 scenarios.  
