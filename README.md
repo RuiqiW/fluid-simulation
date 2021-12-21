@@ -1,5 +1,5 @@
 # CSC417 Final Project
-Here is the CPU implementation of paper <a href="https://mmacklin.com/pbf_sig_preprint.pdf>Position Based Fluids</a>
+Here is the CPU implementation of paper <a href="https://mmacklin.com/pbf_sig_preprint.pdf">Position Based Fluids</a>
 ## Install
 Check out the repo for <a href="https://github.com/dilevin/CSC417-a1-mass-spring-1d"> installation</a> that is required for this project
 
